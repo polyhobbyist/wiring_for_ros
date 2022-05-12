@@ -22,7 +22,7 @@ public:
     
     void begin();
     void beginTransmission(uint16_t id);
-    uint8_t endTransmission(bool end = true);
+    uint8_t endTransmission(bool end = false);
     bool available();
     uint8_t read();
     void write(uint8_t value);

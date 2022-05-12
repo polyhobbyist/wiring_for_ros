@@ -31,8 +31,15 @@ void TwoWire::beginTransmission(uint16_t id)
 {
     _i2cDevice.bus = _i2cFileDescriptor;
     _i2cDevice.addr = id;
-    _i2cDevice.iaddr_bytes = 2;         // todo make this configurable.
-    _i2cDevice.page_bytes = 64;
+    _i2cDevice.iaddr_bytes = 1;
+    _i2cDevice.page_bytes = 8;
+
+
+    // If we're beginning a new transmission, but have an old one, purge it now
+    if (_writeBuffer.size() > 0)
+    {
+        endTransmission(true);
+    }
 }
 
 uint8_t TwoWire::endTransmission(bool sendStop)
@@ -44,7 +51,7 @@ uint8_t TwoWire::endTransmission(bool sendStop)
     if (sendStop)
     {
         uint16_t regi = 0;
-        if (_writeBuffer.size() > 0)
+        if (_writeBuffer.size() >= _i2cDevice.iaddr_bytes)
         {
             regi = _writeBuffer.data()[0]; // first byte is the full address or the upper byte in a 2 byte address.
             if (_i2cDevice.iaddr_bytes == 2)
@@ -54,7 +61,7 @@ uint8_t TwoWire::endTransmission(bool sendStop)
 
             writeSize = _writeBuffer.size() - _i2cDevice.iaddr_bytes;
             buffer = _writeBuffer.data() + _i2cDevice.iaddr_bytes;
-
+#ifdef TRACE_i2c
             std::string trace = "";
             for (size_t i = 0; i < writeSize; i++)
             {
@@ -62,7 +69,8 @@ uint8_t TwoWire::endTransmission(bool sendStop)
                 snprintf(buff, sizeof(buff), "0x%02x ", buffer[i]);
                 trace.append(buff);
             }
-            //RCLCPP_INFO(rclcpp::get_logger("i2c"), "Writing to [0x%2x]: [%s] %d bytes", regi, trace.c_str(), writeSize);
+            RCLCPP_INFO(rclcpp::get_logger("i2c"), "Writing to [0x%2x]: [%s] %d bytes", regi, trace.c_str(), writeSize);
+#endif
         }
 
         int ret = i2c_ioctl_write(&_i2cDevice, regi, buffer, writeSize);
@@ -117,6 +125,11 @@ uint32_t TwoWire::requestFrom(uint16_t id, size_t size)
             regi = regi << 8 | _writeBuffer.data()[1]; // second byte is the low address.
         }
         _writeBuffer.clear();
+    }
+    else
+    {
+        // If this was a hold over from a previous batch, purge it
+        endTransmission(true);
     }
 
     _i2cDevice.bus = _i2cFileDescriptor;
