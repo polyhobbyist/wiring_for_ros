@@ -34,9 +34,6 @@ void TwoWire::beginTransmission(uint16_t id)
     _i2cDevice.addr = id;
     _i2cDevice.iaddr_bytes = _addressBytes;
     _i2cDevice.page_bytes = 8;
-
-
-    // If we're beginning a new transmission, but have an old one, parse it now
     if (_writeBuffer.size() > 0)
     {
         endTransmission(true);
@@ -62,7 +59,7 @@ uint8_t TwoWire::endTransmission(bool sendStop)
 
             writeSize = _writeBuffer.size() - _i2cDevice.iaddr_bytes;
             buffer = _writeBuffer.data() + _i2cDevice.iaddr_bytes;
-
+#ifdef TRACE_i2c
             std::string trace = "";
             for (size_t i = 0; i < writeSize; i++)
             {
@@ -70,7 +67,8 @@ uint8_t TwoWire::endTransmission(bool sendStop)
                 snprintf(buff, sizeof(buff), "0x%02x ", buffer[i]);
                 trace.append(buff);
             }
-            //RCLCPP_INFO(rclcpp::get_logger("i2c"), "Writing to [0x%2x]: [%s] %d bytes", regi, trace.c_str(), writeSize);
+            RCLCPP_INFO(rclcpp::get_logger("i2c"), "Writing to [0x%2x]: [%s] %d bytes", regi, trace.c_str(), writeSize);
+#endif
         }
 
         int ret = i2c_ioctl_write(&_i2cDevice, regi, buffer, writeSize);
