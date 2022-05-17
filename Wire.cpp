@@ -10,6 +10,7 @@ TwoWire Wire;
 TwoWire::TwoWire(std::string bus)
     : _bus(bus)
     , _readIndex(0)
+    , _addressBytes(1)
 {
 
 
@@ -31,8 +32,15 @@ void TwoWire::beginTransmission(uint16_t id)
 {
     _i2cDevice.bus = _i2cFileDescriptor;
     _i2cDevice.addr = id;
-    _i2cDevice.iaddr_bytes = 2;         // todo make this configurable.
-    _i2cDevice.page_bytes = 64;
+    _i2cDevice.iaddr_bytes = _addressBytes;
+    _i2cDevice.page_bytes = 8;
+
+
+    // If we're beginning a new transmission, but have an old one, parse it now
+    if (_writeBuffer.size() > 0)
+    {
+        endTransmission(true);
+    }
 }
 
 uint8_t TwoWire::endTransmission(bool sendStop)
@@ -41,10 +49,10 @@ uint8_t TwoWire::endTransmission(bool sendStop)
     uint8_t* buffer = nullptr;
     size_t writeSize = 0;
 
-    if (sendStop)
+    if (sendStop || _writeBuffer.size() == 0)
     {
         uint16_t regi = 0;
-        if (_writeBuffer.size() > 0)
+        if (_writeBuffer.size() >= _i2cDevice.iaddr_bytes)
         {
             regi = _writeBuffer.data()[0]; // first byte is the full address or the upper byte in a 2 byte address.
             if (_i2cDevice.iaddr_bytes == 2)
@@ -68,7 +76,7 @@ uint8_t TwoWire::endTransmission(bool sendStop)
         int ret = i2c_ioctl_write(&_i2cDevice, regi, buffer, writeSize);
 
         _i2cDevice.flags = 0;
-        
+
         if (ret == -1 || (size_t)ret != writeSize)
         {
             RCLCPP_INFO(rclcpp::get_logger("i2c"), "failed to write: [%d]", ret);
@@ -117,6 +125,11 @@ uint32_t TwoWire::requestFrom(uint16_t id, size_t size)
             regi = regi << 8 | _writeBuffer.data()[1]; // second byte is the low address.
         }
         _writeBuffer.clear();
+    }
+    else
+    {
+        // If this was a hold over from a previous batch, purge it
+        endTransmission(true);
     }
 
     _i2cDevice.bus = _i2cFileDescriptor;

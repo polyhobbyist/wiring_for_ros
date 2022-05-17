@@ -15,14 +15,20 @@ class TwoWire
     std::vector<uint8_t> _readBuffer;
     size_t _readIndex;
     uint16_t _lastAddress;
+    uint8_t _addressBytes;
 
 
 public:
     TwoWire(std::string bus = "/dev/i2c-1");
+
+    void setAddressSize(uint8_t bytes)
+    {
+        _addressBytes = bytes;
+    }
     
     void begin();
     void beginTransmission(uint16_t id);
-    uint8_t endTransmission(bool end = true);
+    uint8_t endTransmission(bool end = false);
     bool available();
     uint8_t read();
     void write(uint8_t value);
