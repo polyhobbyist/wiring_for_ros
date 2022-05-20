@@ -63,4 +63,7 @@ void delay(uint32_t);
 #define pgm_read_byte_near(x) *x
 #define __FlashStringHelper void
 
+// some libraries do not do this, so help them out.
+using namespace std;
+
 #endif

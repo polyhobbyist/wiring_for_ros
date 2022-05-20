@@ -31,7 +31,6 @@ void TwoWire::beginTransmission(uint16_t id)
 {
     _i2cDevice.bus = _i2cFileDescriptor;
     _i2cDevice.addr = id;
-    _i2cDevice.iaddr_bytes = 2;         // todo make this configurable.
     _i2cDevice.page_bytes = 64;
 }
 
@@ -119,6 +118,11 @@ uint32_t TwoWire::requestFrom(uint16_t id, size_t size)
         _writeBuffer.clear();
     }
 
+    return requestFrom(id, regi, size);
+}
+
+uint32_t TwoWire::requestFrom(uint16_t id, uint8_t regi, size_t size)
+{
     _i2cDevice.bus = _i2cFileDescriptor;
     _i2cDevice.addr = id;
 
