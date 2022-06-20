@@ -34,6 +34,18 @@ public:
     void write(uint8_t value);
     void write(uint8_t* value, size_t len);
     uint32_t requestFrom(uint16_t, size_t);
+    uint32_t requestFrom(uint16_t id, uint8_t regi, size_t size);
+
+    inline uint32_t requestFrom(uint16_t id, uint8_t regi, int size)
+    {
+        if (size > 0)
+        {
+            return requestFrom(id, regi, static_cast<size_t>(size));
+        }
+
+        return 0;
+    }
+
     void setClock(uint32_t clock);
 };
 

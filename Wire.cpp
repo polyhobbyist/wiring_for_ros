@@ -130,6 +130,11 @@ uint32_t TwoWire::requestFrom(uint16_t id, size_t size)
         endTransmission(true);
     }
 
+    return requestFrom(id, regi, size);
+}
+
+uint32_t TwoWire::requestFrom(uint16_t id, uint8_t regi, size_t size)
+{
     _i2cDevice.bus = _i2cFileDescriptor;
     _i2cDevice.addr = id;
 
