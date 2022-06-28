@@ -16,6 +16,7 @@ class TwoWire
     size_t _readIndex;
     uint16_t _lastAddress;
     uint8_t _addressBytes;
+    uint16_t _pageBytes;
 
 
 public:
@@ -24,6 +25,11 @@ public:
     void setAddressSize(uint8_t bytes)
     {
         _addressBytes = bytes;
+    }
+
+    void setPageBytes(uint16_t bytes)
+    {
+        _pageBytes = bytes;
     }
     
     void begin();
@@ -34,9 +40,9 @@ public:
     void write(uint8_t value);
     void write(uint8_t* value, size_t len);
     uint32_t requestFrom(uint16_t, size_t);
-    uint32_t requestFrom(uint16_t id, uint8_t regi, size_t size);
+    uint32_t requestFrom(uint16_t id, uint16_t regi, size_t size);
 
-    inline uint32_t requestFrom(uint16_t id, uint8_t regi, int size)
+    inline uint32_t requestFrom(uint16_t id, uint16_t regi, int size)
     {
         if (size > 0)
         {

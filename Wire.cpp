@@ -6,11 +6,14 @@
 #include <string.h>
 #include "Wire.h"
 
+//#define TRACE_i2c
+
 TwoWire Wire;
 TwoWire::TwoWire(std::string bus)
     : _bus(bus)
     , _readIndex(0)
     , _addressBytes(1)
+    , _pageBytes(8)
 {
 
 
@@ -21,6 +24,7 @@ void TwoWire::begin()
 {
     if ((_i2cFileDescriptor = i2c_open(_bus.c_str())) == -1) 
     {
+        RCLCPP_ERROR(rclcpp::get_logger("i2c"), "Failed to open bus %s", _bus.c_str());
         return;
     }
 
@@ -33,7 +37,7 @@ void TwoWire::beginTransmission(uint16_t id)
     _i2cDevice.bus = _i2cFileDescriptor;
     _i2cDevice.addr = id;
     _i2cDevice.iaddr_bytes = _addressBytes;
-    _i2cDevice.page_bytes = 8;
+    _i2cDevice.page_bytes = _pageBytes;
     if (_writeBuffer.size() > 0)
     {
         endTransmission(true);
@@ -51,10 +55,10 @@ uint8_t TwoWire::endTransmission(bool sendStop)
         uint16_t regi = 0;
         if (_writeBuffer.size() >= _i2cDevice.iaddr_bytes)
         {
-            regi = _writeBuffer.data()[0]; // first byte is the full address or the upper byte in a 2 byte address.
+            regi = _writeBuffer[0]; // first byte is the full address or the upper byte in a 2 byte address.
             if (_i2cDevice.iaddr_bytes == 2)
             {
-                regi = (regi << 8) | _writeBuffer.data()[1]; // second byte is the low address.
+                regi = (regi << 8) | (_writeBuffer[1]); // second byte is the low address.
             }
 
             writeSize = _writeBuffer.size() - _i2cDevice.iaddr_bytes;
@@ -67,7 +71,7 @@ uint8_t TwoWire::endTransmission(bool sendStop)
                 snprintf(buff, sizeof(buff), "0x%02x ", buffer[i]);
                 trace.append(buff);
             }
-            RCLCPP_INFO(rclcpp::get_logger("i2c"), "Writing to [0x%2x]: [%s] %d bytes", regi, trace.c_str(), writeSize);
+            RCLCPP_INFO(rclcpp::get_logger("i2c"), "Writing to [0x%02x]: [%s] %d bytes", regi, trace.c_str(), writeSize);
 #endif
         }
 
@@ -80,7 +84,6 @@ uint8_t TwoWire::endTransmission(bool sendStop)
             RCLCPP_INFO(rclcpp::get_logger("i2c"), "failed to write: [%d]", ret);
             error = 1;
         }
-
         _writeBuffer.clear();
     }
 
@@ -117,10 +120,10 @@ uint32_t TwoWire::requestFrom(uint16_t id, size_t size)
     uint16_t regi = _lastAddress;
     if (_writeBuffer.size() == _i2cDevice.iaddr_bytes)
     {
-        regi = _writeBuffer.data()[0]; // first byte is the full address or the upper byte in a 2 byte address.
+        regi = _writeBuffer[0]; // first byte is the full address or the upper byte in a 2 byte address.
         if (_i2cDevice.iaddr_bytes == 2)
         {
-            regi = regi << 8 | _writeBuffer.data()[1]; // second byte is the low address.
+            regi = (regi << 8) | (_writeBuffer[1]); // second byte is the low address.
         }
         _writeBuffer.clear();
     }
@@ -133,7 +136,7 @@ uint32_t TwoWire::requestFrom(uint16_t id, size_t size)
     return requestFrom(id, regi, size);
 }
 
-uint32_t TwoWire::requestFrom(uint16_t id, uint8_t regi, size_t size)
+uint32_t TwoWire::requestFrom(uint16_t id, uint16_t regi, size_t size)
 {
     _i2cDevice.bus = _i2cFileDescriptor;
     _i2cDevice.addr = id;
