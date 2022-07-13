@@ -32,6 +32,7 @@ public:
         _pageBytes = bytes;
     }
     
+
     void begin();
     void beginTransmission(uint16_t id);
     uint8_t endTransmission(bool end = false);
@@ -53,6 +54,7 @@ public:
     }
 
     void setClock(uint32_t clock);
+    void setBus(std::string bus);
 };
 
 
