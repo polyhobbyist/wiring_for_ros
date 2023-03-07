@@ -25,15 +25,8 @@ inline uint8_t lowByte(uint16_t val)
     return (uint8_t)(val & 0xFF);
 }
 
-inline void pinMode(uint16_t, uint16_t)
-{
-
-}
-
-inline void digitalWrite(uint16_t, uint16_t)
-{
-
-}
+void pinMode(uint16_t, uint16_t);
+void digitalWrite(uint16_t, uint16_t);
 
 
 class Stream
