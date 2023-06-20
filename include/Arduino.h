@@ -13,7 +13,9 @@
 
 #define PROGMEM
 
+#if __cplusplus < 201703L
 typedef uint8_t byte;
+#endif
 
 inline uint8_t highByte(uint16_t val)
 {
