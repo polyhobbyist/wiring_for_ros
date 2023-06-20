@@ -163,3 +163,9 @@ void TwoWire::setClock(uint32_t)
     // TODO
 
 }
+
+void TwoWire::setBus(std::string bus)
+{
+    // TODO handle case where begin() has already been called
+    _bus = bus;
+}
