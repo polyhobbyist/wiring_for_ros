@@ -88,6 +88,16 @@ target_link_libraries(${PROJECT_NAME} ${SOURCE_DIR}/libi2c.so  gpiod)
 add_dependencies(${PROJECT_NAME}  libi2c) 
 ```
 
+# Supported Electrical Busses
+
+|Bus | Arduino API | Notes|
+|---|---|---|
+|I2C|Wire class|The Wiring API is present in the main repo, and usable for many device types
+|SPI|SPI class|Coming Soon|
+|GPIO|digitalWrite/digitalRead| Write is available in the gpio repo, Read coming soon.|
+|ADC|analogWrite/analogRead| Not directly supported with a Pi header; investigating support over i2c.|
+
+
 # Referencing
 If you find this project useful, please link back. 
 
